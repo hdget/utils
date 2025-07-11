@@ -36,6 +36,13 @@ func JsonArray(args ...any) []byte {
 		return emptyJsonArray
 	}
 
+	switch v := args[0].(type) {
+	case string:
+		return convert.StringToBytes(v)
+	case []byte:
+		return v
+	}
+
 	v := reflect.ValueOf(args[0])
 	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
@@ -55,6 +62,13 @@ func JsonArray(args ...any) []byte {
 func JsonObject(args ...any) []byte {
 	if len(args) == 0 || args[0] == nil {
 		return emptyJsonObject
+	}
+
+	switch v := args[0].(type) {
+	case string:
+		return convert.StringToBytes(v)
+	case []byte:
+		return v
 	}
 
 	v := reflect.ValueOf(args[0])
