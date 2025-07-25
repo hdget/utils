@@ -38,7 +38,11 @@ func JsonArray(args ...any) []byte {
 
 	switch v := args[0].(type) {
 	case string:
-		return convert.StringToBytes(v)
+		if v == "" {
+			return emptyJsonObject
+		} else {
+			return convert.StringToBytes(v)
+		}
 	case []byte:
 		return v
 	}
@@ -55,6 +59,10 @@ func JsonArray(args ...any) []byte {
 	}
 
 	jsonData, _ := json.Marshal(args[0])
+	if !json.Valid(jsonData) {
+		return emptyJsonArray
+	}
+
 	return jsonData
 }
 
@@ -66,7 +74,11 @@ func JsonObject(args ...any) []byte {
 
 	switch v := args[0].(type) {
 	case string:
-		return convert.StringToBytes(v)
+		if v == "" {
+			return emptyJsonObject
+		} else {
+			return convert.StringToBytes(v)
+		}
 	case []byte:
 		return v
 	}
@@ -83,5 +95,9 @@ func JsonObject(args ...any) []byte {
 	}
 
 	jsonData, _ := json.Marshal(args[0])
+	if !json.Valid(jsonData) {
+		return emptyJsonObject
+	}
+
 	return jsonData
 }
