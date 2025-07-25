@@ -36,33 +36,24 @@ func JsonArray(args ...any) []byte {
 		return emptyJsonArray
 	}
 
+	var jsonData []byte
 	switch v := args[0].(type) {
 	case string:
-		if v == "" {
-			return emptyJsonObject
-		} else {
-			return convert.StringToBytes(v)
+		if v != "" {
+			jsonData = convert.StringToBytes(v)
 		}
 	case []byte:
-		return v
+		jsonData = v
+	default:
+		val := indirect(reflect.ValueOf(args[0]))
+		if !val.IsZero() && val.Kind() == reflect.Slice {
+			jsonData, _ = json.Marshal(args[0])
+		}
 	}
 
-	v := reflect.ValueOf(args[0])
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Slice {
-		return emptyJsonArray
-	} else if v.Cap() == 0 {
-		return emptyJsonArray
-	}
-
-	jsonData, _ := json.Marshal(args[0])
 	if !json.Valid(jsonData) {
 		return emptyJsonArray
 	}
-
 	return jsonData
 }
 
@@ -72,32 +63,30 @@ func JsonObject(args ...any) []byte {
 		return emptyJsonObject
 	}
 
+	var jsonData []byte
 	switch v := args[0].(type) {
 	case string:
-		if v == "" {
-			return emptyJsonObject
-		} else {
-			return convert.StringToBytes(v)
+		if v != "" {
+			jsonData = convert.StringToBytes(v)
 		}
 	case []byte:
-		return v
+		jsonData = v
+	default:
+		val := indirect(reflect.ValueOf(args[0]))
+		if !val.IsZero() && (val.Kind() == reflect.Struct || val.Kind() == reflect.Map) {
+			jsonData, _ = json.Marshal(args[0])
+		}
 	}
 
-	v := reflect.ValueOf(args[0])
-	if v.Kind() == reflect.Pointer {
-		v = v.Elem()
-	}
-
-	if !pie.Contains([]reflect.Kind{reflect.Struct, reflect.Map}, v.Kind()) {
-		return emptyJsonObject
-	} else if v.IsZero() {
-		return emptyJsonObject
-	}
-
-	jsonData, _ := json.Marshal(args[0])
 	if !json.Valid(jsonData) {
 		return emptyJsonObject
 	}
-
 	return jsonData
+}
+
+func indirect(reflectValue reflect.Value) reflect.Value {
+	for reflectValue.Kind() == reflect.Ptr {
+		return reflectValue.Elem()
+	}
+	return reflectValue
 }
