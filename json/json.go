@@ -46,7 +46,7 @@ func JsonArray(args ...any) []byte {
 		jsonData = v
 	default:
 		val := indirect(reflect.ValueOf(args[0]))
-		if !val.IsZero() && val.Kind() == reflect.Slice {
+		if val.IsValid() && !val.IsZero() && val.Kind() == reflect.Slice {
 			jsonData, _ = json.Marshal(args[0])
 		}
 	}
@@ -73,7 +73,7 @@ func JsonObject(args ...any) []byte {
 		jsonData = v
 	default:
 		val := indirect(reflect.ValueOf(args[0]))
-		if !val.IsZero() && (val.Kind() == reflect.Struct || val.Kind() == reflect.Map) {
+		if val.IsValid() && !val.IsZero() && (val.Kind() == reflect.Struct || val.Kind() == reflect.Map) {
 			jsonData, _ = json.Marshal(args[0])
 		}
 	}
