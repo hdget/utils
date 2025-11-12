@@ -32,19 +32,19 @@ func Fatal(msg string, keyvals ...any) {
 }
 
 // ParseArgs  解析error和message用统一格式展示出来
-func ParseArgs(keyvals ...any) (string, error, map[string]any) {
-	countArgs := len(keyvals)
+func ParseArgs(kvs ...any) (string, map[string]any, error) {
+	countArgs := len(kvs)
 	// 如果可变参数个数为0，肯定没有error
 	if countArgs == 0 {
 		return "", nil, nil
 	}
 
-	var errValue error
+	var err error
 	var msgValue string
 	args := make(map[string]any)
 	for i := 0; i < countArgs-1; i = i + 2 {
 		// 第i个值作为map的key, 第i+1个值作为map的value
-		k, ok := keyvals[i].(string)
+		k, ok := kvs[i].(string)
 		if !ok {
 			continue
 		}
@@ -53,24 +53,24 @@ func ParseArgs(keyvals ...any) (string, error, map[string]any) {
 		case "level", "caller":
 			// do nothing
 		case "err", "panic": // err and panic must be panic type
-			switch v := keyvals[i+1].(type) {
+			switch v := kvs[i+1].(type) {
 			case error:
-				errValue = v
+				err = v
 			default:
-				errValue = fmt.Errorf("%v", keyvals[i+1])
+				err = fmt.Errorf("%v", kvs[i+1])
 			}
 		case "msg", "message":
-			msgValue = fmt.Sprintf("%v", keyvals[i+1])
+			msgValue = fmt.Sprintf("%v", kvs[i+1])
 		default:
-			args[k] = keyvals[i+1]
+			args[k] = kvs[i+1]
 		}
 	}
-	return msgValue, errValue, args
+	return msgValue, args, err
 }
 
 // logPrint log structure message and key values
-func logPrint(level logLevel, msg string, keyvals ...any) {
-	_, errValue, fields := ParseArgs(keyvals...)
+func logPrint(level logLevel, msg string, kvs ...any) {
+	_, fields, err := ParseArgs(kvs...)
 
 	outputs := make([]string, 0)
 	for k, v := range fields {
@@ -83,14 +83,14 @@ func logPrint(level logLevel, msg string, keyvals ...any) {
 	}
 
 	if len(outputs) > 0 {
-		if errValue != nil {
-			logFn("%s msg=\"%s\" %s error=\"%v\"", level, msg, strings.Join(outputs, " "), errValue)
+		if err != nil {
+			logFn("%s msg=\"%s\" %s error=\"%v\"", level, msg, strings.Join(outputs, " "), err)
 		} else {
 			logFn("%s msg=\"%s\" %s", level, msg, strings.Join(outputs, " "))
 		}
 	} else {
-		if errValue != nil {
-			logFn("%s msg=\"%s\" error=\"%v\"", level, msg, errValue)
+		if err != nil {
+			logFn("%s msg=\"%s\" error=\"%v\"", level, msg, err)
 		} else {
 			logFn("%s msg=\"%s\"", level, msg)
 		}
