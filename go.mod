@@ -9,6 +9,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/speps/go-hashids/v2 v2.0.1
 	github.com/spf13/cast v1.6.0
+	github.com/sqids/sqids-go v0.4.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/text v0.16.0
 )
