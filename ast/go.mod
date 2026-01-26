@@ -1,4 +1,4 @@
-module github.com/hdget/utils/astutils
+module github.com/hdget/utils/ast
 
 go 1.23.0
 
