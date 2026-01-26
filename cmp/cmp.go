@@ -1,9 +1,10 @@
 package cmp
 
 import (
-	"github.com/hdget/utils/convert"
 	"regexp"
 	"strings"
+
+	"github.com/hdget/utils"
 )
 
 var (
@@ -11,8 +12,8 @@ var (
 )
 
 // IsValidMobile check if the text is valid chinese mobile number
-func IsValidMobile(mobile string) bool {
-	return regexIsMobile.MatchString(mobile)
+func IsValidMobile(s string) bool {
+	return regexIsMobile.MatchString(s)
 }
 
 // IsAlphanumeric check if the text contains only letters and numbers. Empty text is valid.
@@ -44,7 +45,7 @@ func IsImageData(data []byte) bool {
 		"GIF87a":            "image/gif",
 		"GIF89a":            "image/gif",
 	}
-	s := convert.BytesToString(data)
+	s := utils.BytesToString(data)
 	for magic := range magicTable {
 		if strings.HasPrefix(s, magic) {
 			return true
@@ -52,18 +53,3 @@ func IsImageData(data []byte) bool {
 	}
 	return false
 }
-
-//
-//func Contains[T comparable](list []T, checkItem T) bool {
-//	if len(list) == 0 {
-//		return false
-//	}
-//
-//	for _, item := range list {
-//		if item == checkItem {
-//			return true
-//		}
-//	}
-//
-//	return false
-//}
