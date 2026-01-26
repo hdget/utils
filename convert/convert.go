@@ -3,35 +3,21 @@ package convert
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pkg/errors"
-	"github.com/spf13/cast"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"reflect"
 	"regexp"
 	"strings"
 	"unicode"
-	"unsafe"
+
+	"github.com/hdget/utils"
+	"github.com/pkg/errors"
+	"github.com/spf13/cast"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
 	rxCameling = regexp.MustCompile(`[\p{L}\p{N}]+`)
 )
-
-// StringToBytes converts text to byte slice without a memory allocation.
-func StringToBytes(s string) []byte {
-	return *(*[]byte)(unsafe.Pointer(
-		&struct {
-			string
-			Cap int
-		}{s, len(s)},
-	))
-}
-
-// BytesToString converts byte slice to text without a memory allocation.
-func BytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
 
 // ToString 尝试将值转换成字符串
 func ToString(value any) (string, error) {
@@ -39,21 +25,21 @@ func ToString(value any) (string, error) {
 	case string:
 		return reply, nil
 	case []byte:
-		return BytesToString(reply), nil
+		return utils.BytesToString(reply), nil
 	}
 
 	bs, err := json.Marshal(value)
 	if err != nil {
 		return "", err
 	}
-	return BytesToString(bs), nil
+	return utils.BytesToString(bs), nil
 }
 
 func ToBytes(value any) ([]byte, error) {
 	var data []byte
 	switch t := value.(type) {
 	case string:
-		data = StringToBytes(t)
+		data = utils.StringToBytes(t)
 	case []byte:
 		data = t
 	default:

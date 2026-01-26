@@ -3,10 +3,11 @@ package encoding
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/elliotchance/pie/v2"
-	"github.com/sqids/sqids-go"
 	"strings"
 	"sync"
+
+	"github.com/elliotchance/pie/v2"
+	"github.com/sqids/sqids-go"
 )
 
 type Coder interface {

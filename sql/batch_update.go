@@ -1,10 +1,11 @@
 package sql
 
 import (
+	"errors"
 	"fmt"
-	"github.com/hdget/utils/convert"
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/hdget/utils"
 )
 
 type BatchUpdater interface {
@@ -117,7 +118,7 @@ func (u *mysqlBatchUpdater) formatValue(value any) string {
 	case float32, float64:
 		return fmt.Sprintf("%.4f", v)
 	case []byte:
-		return fmt.Sprintf("'%s'", convert.BytesToString(v))
+		return fmt.Sprintf("'%s'", utils.BytesToString(v))
 	}
 	return fmt.Sprintf("%v", value)
 }

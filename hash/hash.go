@@ -3,20 +3,21 @@ package hash
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/hdget/utils/convert"
+	"hash/fnv"
+
+	"github.com/hdget/utils"
 	"github.com/matoous/go-nanoid/v2"
 	"github.com/speps/go-hashids/v2"
-	"hash/fnv"
 )
 
 func HashToUint32(s string) uint32 {
 	h := fnv.New32a()
-	_, _ = h.Write(convert.StringToBytes(s))
+	_, _ = h.Write(utils.StringToBytes(s))
 	return h.Sum32()
 }
 
 func HashString(s string, length int) string {
-	return HashBytes(convert.StringToBytes(s), length)
+	return HashBytes(utils.StringToBytes(s), length)
 }
 
 func HashBytes(data []byte, length int) string {
