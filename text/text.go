@@ -1,15 +1,20 @@
 package text
 
 import (
+	"bytes"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
 	nonNumericRegex      = regexp.MustCompile(`[^0-9 ]+`)       // 非数字
 	nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`) // 非英文字符和数字
 	nonChineseRegex      = regexp.MustCompile(`[^\p{Han}]+`)    // 非汉字
+	rxCameling           = regexp.MustCompile(`[\p{L}\p{N}]+`)
 )
 
 // OnlyNumeric 去除数字以外的所有字符
@@ -28,9 +33,9 @@ func OnlyChinese(s string) string {
 }
 
 // CleanString 处理字符串, args[0]为是否转换为小写
-func CleanString(origStr string, args ...bool) string {
+func CleanString(s string, args ...bool) string {
 	// 1. 去除前后空格
-	s := strings.TrimSpace(origStr)
+	cleanString := strings.TrimSpace(s)
 
 	// 2. 是否转换小写
 	toLower := false
@@ -39,12 +44,11 @@ func CleanString(origStr string, args ...bool) string {
 	}
 
 	if toLower {
-		s = strings.ToLower(s)
+		cleanString = strings.ToLower(cleanString)
 	}
 
 	// 去除不可见字符
-	s = removeInvisibleCharacter(s)
-	return s
+	return removeInvisibleCharacter(cleanString)
 }
 
 // Capitalize 字符串首字母大写
@@ -94,14 +98,40 @@ func CamelToSnake(s string) string {
 	return string(buf)
 }
 
+// ToCamelCase converts from underscore separated form to camel case form.
+func ToCamelCase(s string) string {
+	byteSrc := []byte(s)
+	chunks := rxCameling.FindAll(byteSrc, -1)
+	for idx, val := range chunks {
+		chunks[idx] = cases.Title(language.English).Bytes(val)
+	}
+	return string(bytes.Join(chunks, nil))
+}
+
+// ToSnakeCase converts from camel case form to underscore separated form.
+func ToSnakeCase(s string) string {
+	s = ToCamelCase(s)
+	runes := []rune(s)
+	length := len(runes)
+	var out []rune
+	for i := 0; i < length; i++ {
+		out = append(out, unicode.ToLower(runes[i]))
+		if i+1 < length && (unicode.IsUpper(runes[i+1]) && unicode.IsLower(runes[i])) {
+			out = append(out, '_')
+		}
+	}
+
+	return string(out)
+}
+
 // removeInvisibleCharacter 去除掉不能显示的字符
-func removeInvisibleCharacter(origStr string) string {
+func removeInvisibleCharacter(s string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsGraphic(r) {
 			return r
 		}
 		return -1
-	}, origStr)
+	}, s)
 }
 
 func Truncate(s string, size int) string {
