@@ -48,8 +48,7 @@ func CleanString(s string, args ...bool) string {
 	}
 
 	// 去除不可见字符
-	cleanString = removeInvisibleCharacter(cleanString)
-	return cleanString
+	return removeInvisibleCharacter(cleanString)
 }
 
 // Capitalize 字符串首字母大写
