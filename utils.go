@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -83,10 +82,10 @@ func ToSlice(data any) []any {
 
 // CsvToNumbers converts a comma-separated string to a slice of the specified numeric type.
 // Returns the slice and any conversion error encountered.
-func CsvToNumbers[T Numeric](s string) ([]T, error) {
+func CsvToNumbers[T Numeric](s string) []T {
 	// Handle empty string case
 	if s == "" {
-		return []T{}, nil
+		return []T{}
 	}
 
 	// Split the string by commas
@@ -98,26 +97,20 @@ func CsvToNumbers[T Numeric](s string) ([]T, error) {
 		// Trim any surrounding whitespace from each element
 		str = strings.TrimSpace(str)
 
-		var err error
 		switch any(*new(T)).(type) {
 		case int, int8, int16, int32, int64:
-			var val int64
-			val, err = strconv.ParseInt(str, 10, 64)
+			val, _ := strconv.ParseInt(str, 10, 64)
 			result[i] = T(val)
 		case uint, uint8, uint16, uint32, uint64:
-			var val uint64
-			val, err = strconv.ParseUint(str, 10, 64)
+			val, _ := strconv.ParseUint(str, 10, 64)
 			result[i] = T(val)
 		case float32, float64:
-			var val float64
-			val, err = strconv.ParseFloat(str, 64)
+			val, _ := strconv.ParseFloat(str, 64)
 			result[i] = T(val)
 		}
-		if err != nil {
-			return nil, fmt.Errorf("error converting '%s' at index %d: %v", str, i, err)
-		}
+
 	}
-	return result, nil
+	return result
 }
 
 // NumbersToCsv 将int64 slice转换成用逗号分隔的字符串: 1,2,3
@@ -143,44 +136,26 @@ func NumbersToStrings[T Numeric](numbers []T) []string {
 }
 
 // StringsToNumbers converts a string slice to numeric slice with error handling
-func StringsToNumbers[T Numeric](strSlice []string) ([]T, error) {
+func StringsToNumbers[T Numeric](strSlice []string) []T {
 	result := make([]T, len(strSlice))
 
-	var zeroValue T
 	for i, str := range strSlice {
 		// Trim whitespace from each string element
 		str = strings.TrimSpace(str)
 
-		var err error
-		var value interface{}
-
 		// Use type switching based on the target type T
 		switch any(*new(T)).(type) {
 		case int, int8, int16, int32, int64:
-			var val int64
-			val, err = strconv.ParseInt(str, 10, 64)
-			value = val
+			val, _ := strconv.ParseInt(str, 10, 64)
+			result[i] = T(val)
 		case uint, uint8, uint16, uint32, uint64:
-			var val uint64
-			val, err = strconv.ParseUint(str, 10, 64)
-			value = val
+			val, _ := strconv.ParseUint(str, 10, 64)
+			result[i] = T(val)
 		case float32, float64:
-			var val float64
-			val, err = strconv.ParseFloat(str, 64)
-			value = val
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("error converting '%s' at index %d: %v", str, i, err)
-		}
-
-		// Type assertion to convert interface{} to T
-		if v, ok := value.(T); ok {
-			result[i] = v
-		} else {
-			result[i] = zeroValue
+			val, _ := strconv.ParseFloat(str, 64)
+			result[i] = T(val)
 		}
 	}
 
-	return result, nil
+	return result
 }
