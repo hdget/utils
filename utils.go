@@ -12,8 +12,8 @@ import (
 
 type Numeric interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
-	~float32 | ~float64
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+		~float32 | ~float64
 }
 
 // StringToBytes converts text to byte slice without memory allocation.
@@ -93,31 +93,22 @@ func CsvToNumbers[T Numeric](s string) []T {
 	result := make([]T, len(strValues))
 
 	// Convert each string element to the numeric type T
-	var zeroValue T
 	for i, str := range strValues {
 		// Trim any surrounding whitespace from each element
 		str = strings.TrimSpace(str)
 
-		var err error
 		switch any(*new(T)).(type) {
 		case int, int8, int16, int32, int64:
-			var val int64
-			if val, err = strconv.ParseInt(str, 10, 64); err == nil {
-				result[i] = T(val)
-			}
+			val, _ := strconv.ParseInt(str, 10, 64)
+			result[i] = T(val)
 		case uint, uint8, uint16, uint32, uint64:
-			var val uint64
-			if val, err = strconv.ParseUint(str, 10, 64); err == nil {
-				result[i] = T(val)
-			}
+			val, _ := strconv.ParseUint(str, 10, 64)
+			result[i] = T(val)
 		case float32, float64:
-			if val, err := strconv.ParseFloat(str, 64); err == nil {
-				result[i] = T(val)
-			}
+			val, _ := strconv.ParseFloat(str, 64)
+			result[i] = T(val)
 		}
-		if err != nil {
-			result[i] = zeroValue
-		}
+
 	}
 	return result
 }
@@ -148,40 +139,21 @@ func NumbersToStrings[T Numeric](numbers []T) []string {
 func StringsToNumbers[T Numeric](strSlice []string) []T {
 	result := make([]T, len(strSlice))
 
-	var zeroValue T
 	for i, str := range strSlice {
 		// Trim whitespace from each string element
 		str = strings.TrimSpace(str)
 
-		var err error
-		var value any
 		// Use type switching based on the target type T
 		switch any(*new(T)).(type) {
 		case int, int8, int16, int32, int64:
-			var val int64
-			if val, err = strconv.ParseInt(str, 10, 64); err == nil {
-				value = val
-			}
+			val, _ := strconv.ParseInt(str, 10, 64)
+			result[i] = T(val)
 		case uint, uint8, uint16, uint32, uint64:
-			var val uint64
-			if val, err = strconv.ParseUint(str, 10, 64); err == nil {
-				value = val
-			}
+			val, _ := strconv.ParseUint(str, 10, 64)
+			result[i] = T(val)
 		case float32, float64:
-			var val float64
-			if val, err = strconv.ParseFloat(str, 64); err == nil {
-				value = val
-			}
-		}
-		if err != nil {
-			value = zeroValue
-		}
-
-		// Type assertion to convert interface{} to T
-		if v, ok := value.(T); ok {
-			result[i] = v
-		} else {
-			result[i] = zeroValue
+			val, _ := strconv.ParseFloat(str, 64)
+			result[i] = T(val)
 		}
 	}
 
