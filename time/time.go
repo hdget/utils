@@ -273,11 +273,44 @@ func FromUnixTime(ts int64, format string) string {
 	return tm.Format(format)
 }
 
-func AddDays(dateString string, deltaDays int) string {
-	t, err := time.ParseInLocation(time.DateOnly, dateString, time.Local)
+func AddDays(timeString string, deltaDays int, layouts ...string) string {
+	layout := time.DateTime
+	if len(layouts) > 0 && layouts[0] != "" {
+		layout = layouts[0]
+	}
+
+	t, err := time.Parse(layout, timeString)
 	if err != nil {
 		return ""
 	}
-	theDay := t.AddDate(0, 0, deltaDays)
-	return theDay.Format(time.DateOnly)
+
+	return t.AddDate(0, 0, deltaDays).Format(layout)
+}
+
+func AddWeeks(timeString string, deltaWeeks int, layouts ...string) string {
+	layout := time.DateTime
+	if len(layouts) > 0 && layouts[0] != "" {
+		layout = layouts[0]
+	}
+
+	t, err := time.Parse(layout, timeString)
+	if err != nil {
+		return ""
+	}
+
+	return t.AddDate(0, deltaWeeks, deltaWeeks*7).Format(layout)
+}
+
+func AddMonths(timeString string, deltaMonths int, layouts ...string) string {
+	layout := time.DateTime
+	if len(layouts) > 0 && layouts[0] != "" {
+		layout = layouts[0]
+	}
+
+	t, err := time.Parse(layout, timeString)
+	if err != nil {
+		return ""
+	}
+
+	return t.AddDate(0, deltaMonths, 0).Format(layout)
 }
