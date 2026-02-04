@@ -273,11 +273,11 @@ func FromUnixTime(ts int64, format string) string {
 	return tm.Format(format)
 }
 
-func GetNextDay(dateString string) string {
+func AddDays(dateString string, deltaDays int) string {
 	t, err := time.ParseInLocation(time.DateOnly, dateString, time.Local)
 	if err != nil {
 		return ""
 	}
-	nextDay := t.AddDate(0, 0, 1)
-	return nextDay.Format(time.DateOnly)
+	theDay := t.AddDate(0, 0, deltaDays)
+	return theDay.Format(time.DateOnly)
 }
