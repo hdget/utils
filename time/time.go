@@ -2,10 +2,11 @@ package time
 
 import (
 	"fmt"
-	"github.com/golang-module/carbon/v2"
-	"github.com/pkg/errors"
 	"strings"
 	"time"
+
+	"github.com/golang-module/carbon/v2"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -109,7 +110,7 @@ func DeltaDays(t1, t2 time.Time) int {
 		} else {
 			return 1
 		}
-	} else { // equal or more than 24
+	} else {                                        // equal or more than 24
 		if (hours/24)-float64(int(hours/24)) == 0 { // just 24's times
 			return int(hours / 24)
 		} else { // more than 24 hours
@@ -270,4 +271,13 @@ func FromUnixTime(ts int64, format string) string {
 	}
 	tm := time.Unix(ts, 0)
 	return tm.Format(format)
+}
+
+func GetNextDay(dateString string) string {
+	t, err := time.ParseInLocation(time.DateOnly, dateString, time.Local)
+	if err != nil {
+		return ""
+	}
+	nextDay := t.AddDate(0, 0, 1)
+	return nextDay.Format(time.DateOnly)
 }
