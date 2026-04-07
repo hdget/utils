@@ -2,6 +2,9 @@ package paginator
 
 import (
 	"math"
+
+	"github.com/hdget/sdk/common/protobuf"
+	"golang.org/x/exp/constraints"
 )
 
 // Paginate 分页
@@ -20,6 +23,12 @@ func Paginate[T any](sliceVars []T, pageSize int64) [][]T {
 		results[i] = sliceVars[start:end]
 	}
 	return results
+}
+
+// GetLimitFromListParam 从protobuf.ListParam转换成Offset, PageSize
+func GetLimitFromListParam[T constraints.Integer](list ...*protobuf.ListParam) (T, T) {
+	p := NewFromListParam(list...)
+	return T(p.Offset), T(p.PageSize)
 }
 
 // GetStartEndPosition 如果是按列表slice进行翻页的话， 计算slice的起始index

@@ -2,10 +2,13 @@ package paginator
 
 import (
 	"fmt"
+
+	"github.com/hdget/sdk/common/protobuf"
+	"golang.org/x/exp/constraints"
 )
 
 type UtilsPaginator interface {
-	GetMySQLLimitClause() string
+	GetSQLLimitClause() string
 }
 
 type Paginator struct {
@@ -27,7 +30,7 @@ var (
 )
 
 // New 获取分页器
-func New(page, pageSize int64) Paginator {
+func New[T constraints.Integer](page, pageSize T) Paginator {
 	// 处理当前页面
 	if page <= 0 {
 		page = 1
@@ -43,8 +46,18 @@ func New(page, pageSize int64) Paginator {
 	return Paginator{Page: uint64(page), PageSize: uint64(pageSize), Offset: offset}
 }
 
-// GetMySQLLimitClause 获取MySQL的limit子句
-func (p Paginator) GetMySQLLimitClause() string {
+func NewFromListParam(list ...*protobuf.ListParam) Paginator {
+	var p Paginator
+	if len(list) > 0 && list[0] != nil {
+		p = New(list[0].Page, list[0].PageSize)
+	} else {
+		p = DefaultPaginator
+	}
+	return p
+}
+
+// GetSQLLimitClause 获取SQL的limit子句
+func (p Paginator) GetSQLLimitClause() string {
 	if p.Offset == 0 {
 		return fmt.Sprintf("LIMIT %d", p.PageSize)
 	}
