@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hdget/sdk/common/protobuf"
-	"golang.org/x/exp/constraints"
 )
 
 type UtilsPaginator interface {
 	GetSQLLimitClause() string
+}
+
+type Integer interface {
+	~int | ~int32 | ~int64
 }
 
 type Paginator struct {
@@ -30,7 +33,7 @@ var (
 )
 
 // New 获取分页器
-func New[T constraints.Integer](page, pageSize T) Paginator {
+func New[T Integer](page, pageSize T) Paginator {
 	// 处理当前页面
 	if page <= 0 {
 		page = 1
