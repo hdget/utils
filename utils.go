@@ -159,3 +159,12 @@ func StringsToNumbers[T Numeric](strSlice []string) []T {
 
 	return result
 }
+
+func SafeGet[FieldType comparable](obj any, field FieldType) FieldType {
+	if obj == nil {
+		var ret FieldType
+		return ret
+	}
+
+	return field
+}
