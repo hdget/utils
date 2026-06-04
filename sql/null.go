@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hdget/utils"
 	jsonUtils "github.com/hdget/utils/json"
 	"github.com/spf13/cast"
 	"github.com/sqlc-dev/pqtype"
@@ -30,6 +31,15 @@ func GetNullInt32(filters map[string]string, key string) sql.NullInt32 {
 		}
 	}
 	return sql.NullInt32{}
+}
+
+func GetInt32Slice(filters map[string]string, key string) []int32 {
+	if len(filters) > 0 {
+		if v, ok := filters[key]; ok {
+			return utils.CsvToNumbers[int32](filters["stage"])
+		}
+	}
+	return nil
 }
 
 func GetNullInt64(filters map[string]string, key string) sql.NullInt64 {

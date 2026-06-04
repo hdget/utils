@@ -12,8 +12,8 @@ import (
 
 type Numeric interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
-		~float32 | ~float64
+	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 |
+	~float32 | ~float64
 }
 
 // StringToBytes converts text to byte slice without memory allocation.
@@ -80,6 +80,14 @@ func ToSlice(data any) []any {
 	return sliceData
 }
 
+func CsvToNullNumbers[T Numeric](s string) []T {
+	numbers := CsvToNumbers[T](s)
+	if len(numbers) > 0 {
+		return numbers
+	}
+	return nil
+}
+
 // CsvToNumbers converts a comma-separated string to a slice of the specified numeric type.
 // Returns the slice and any conversion error encountered.
 func CsvToNumbers[T Numeric](s string) []T {
@@ -93,22 +101,22 @@ func CsvToNumbers[T Numeric](s string) []T {
 	result := make([]T, len(strValues))
 
 	// Convert each string element to the numeric type T
-	for i, str := range strValues {
-		// Trim any surrounding whitespace from each element
-		str = strings.TrimSpace(str)
-
-		switch any(*new(T)).(type) {
-		case int, int8, int16, int32, int64:
-			val, _ := strconv.ParseInt(str, 10, 64)
-			result[i] = T(val)
-		case uint, uint8, uint16, uint32, uint64:
-			val, _ := strconv.ParseUint(str, 10, 64)
-			result[i] = T(val)
-		case float32, float64:
-			val, _ := strconv.ParseFloat(str, 64)
+	switch any(*new(T)).(type) {
+	case int, int8, int16, int32, int64:
+		for i, str := range strValues {
+			val, _ := strconv.ParseInt(strings.TrimSpace(str), 10, 64)
 			result[i] = T(val)
 		}
-
+	case uint, uint8, uint16, uint32, uint64:
+		for i, str := range strValues {
+			val, _ := strconv.ParseUint(strings.TrimSpace(str), 10, 64)
+			result[i] = T(val)
+		}
+	case float32, float64:
+		for i, str := range strValues {
+			val, _ := strconv.ParseFloat(strings.TrimSpace(str), 64)
+			result[i] = T(val)
+		}
 	}
 	return result
 }
