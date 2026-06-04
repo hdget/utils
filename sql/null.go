@@ -2,12 +2,11 @@ package sql
 
 import (
 	"database/sql"
+	"reflect"
 	"strconv"
 	"time"
 
-	"github.com/hdget/utils"
 	jsonUtils "github.com/hdget/utils/json"
-	"github.com/spf13/cast"
 	"github.com/sqlc-dev/pqtype"
 )
 
@@ -16,66 +15,96 @@ type Number interface {
 }
 
 func GetNullString(filters map[string]string, key string) sql.NullString {
-	if len(filters) > 0 {
-		if v, ok := filters[key]; ok {
-			return sql.NullString{String: v, Valid: true}
-		}
+	if v, ok := filters[key]; ok {
+		return sql.NullString{String: v, Valid: true}
 	}
+
 	return sql.NullString{}
 }
 
 func GetNullInt32(filters map[string]string, key string) sql.NullInt32 {
-	if len(filters) > 0 {
-		if v, ok := filters[key]; ok {
-			return sql.NullInt32{Int32: cast.ToInt32(v), Valid: true}
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseInt(v, 10, 32); err == nil {
+			return sql.NullInt32{Int32: int32(vv), Valid: true}
 		}
 	}
+
 	return sql.NullInt32{}
 }
 
-func GetInt32Slice(filters map[string]string, key string) []int32 {
-	if len(filters) > 0 {
-		if v, ok := filters[key]; ok {
-			return utils.CsvToNumbers[int32](filters["stage"])
+func GetNullBool(filters map[string]string, key string) sql.NullBool {
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseBool(v); err == nil {
+			return sql.NullBool{Bool: vv, Valid: true}
 		}
 	}
-	return nil
+
+	return sql.NullBool{}
+}
+
+func GetNullFloat64(filters map[string]string, key string) sql.NullFloat64 {
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseFloat(v, 64); err == nil {
+			return sql.NullFloat64{Float64: vv, Valid: true}
+		}
+	}
+
+	return sql.NullFloat64{}
+}
+
+func GetNullByte(filters map[string]string, key string) sql.NullByte {
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseUint(v, 10, 8); err == nil {
+			return sql.NullByte{Byte: uint8(vv), Valid: true}
+		}
+
+		if len(v) == 1 {
+			return sql.NullByte{Byte: v[0], Valid: true}
+		}
+	}
+
+	return sql.NullByte{}
+}
+
+func GetNullInt16(filters map[string]string, key string) sql.NullInt16 {
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseInt(v, 10, 16); err == nil {
+			return sql.NullInt16{Int16: int16(vv), Valid: true}
+		}
+	}
+
+	return sql.NullInt16{}
 }
 
 func GetNullInt64(filters map[string]string, key string) sql.NullInt64 {
-	if len(filters) > 0 {
-		if v, ok := filters[key]; ok {
-			return sql.NullInt64{Int64: cast.ToInt64(v), Valid: true}
+	if v, ok := filters[key]; ok {
+		if vv, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return sql.NullInt64{Int64: vv, Valid: true}
 		}
 	}
+
 	return sql.NullInt64{}
 }
 
 func GetNullTime(filters map[string]string, key string) sql.NullTime {
-	if len(filters) > 0 {
-		v, exists := filters[key]
-		if !exists || v == "" {
-			return sql.NullTime{}
-		}
+	v, exists := filters[key]
+	if !exists || v == "" {
+		return sql.NullTime{}
+	}
 
-		formats := []string{
-			time.DateTime, // 2006-01-02 15:04:05
-			time.DateOnly, // 2006-01-02
-			time.RFC3339,  // 2006-01-02T15:04:05Z07:00
-		}
+	if t, valid := parseTimeFromString(v); valid {
+		return sql.NullTime{Time: t, Valid: true}
+	}
 
-		for _, format := range formats {
-			if t, err := time.Parse(format, v); err == nil {
-				return sql.NullTime{Time: t, Valid: true}
-			}
-		}
-
-		// 然后timestamp
-		sec, err := strconv.ParseInt(v, 10, 64)
-		if err == nil {
-			return sql.NullTime{Time: time.Unix(sec, 0), Valid: true}
+	// 然后timestamp
+	if ts, err := strconv.ParseInt(v, 10, 64); err == nil {
+		if ts >= 1e12 && ts < 1e15 { // 毫秒级范围
+			return sql.NullTime{Time: time.UnixMilli(ts), Valid: true}
+		} else if ts >= 0 && ts < 1e12 { // 秒级范围
+			return sql.NullTime{Time: time.Unix(ts, 0), Valid: true}
 		}
 	}
+
 	return sql.NullTime{}
 }
 
@@ -101,7 +130,7 @@ func ToNullInt64[T Number](val *T) sql.NullInt64 {
 }
 
 func ToNullJsonObject(val any) pqtype.NullRawMessage {
-	if val != nil {
+	if !isNilAny(val) {
 		return pqtype.NullRawMessage{
 			RawMessage: jsonUtils.JsonObject(val),
 			Valid:      true,
@@ -111,7 +140,7 @@ func ToNullJsonObject(val any) pqtype.NullRawMessage {
 }
 
 func ToNullJsonArray(val any) pqtype.NullRawMessage {
-	if val != nil {
+	if !isNilAny(val) {
 		return pqtype.NullRawMessage{
 			RawMessage: jsonUtils.JsonArray(val),
 			Valid:      true,
@@ -121,26 +150,17 @@ func ToNullJsonArray(val any) pqtype.NullRawMessage {
 }
 
 func ToNullTime[T int64 | string | time.Time](val T) sql.NullTime {
-	var v interface{} = val // 先转为空接口
-
-	switch vv := v.(type) { // 对空接口进行类型断言
+	switch vv := any(val).(type) { // 对空接口进行类型断言
 	case int64:
-		if vv > 0 {
+		if vv >= 1e12 && vv < 1e15 { // 毫秒级范围
+			return sql.NullTime{Time: time.UnixMilli(vv), Valid: true}
+		} else if vv >= 0 && vv < 1e12 { // 秒级范围
 			return sql.NullTime{Time: time.Unix(vv, 0), Valid: true}
 		}
 	case string:
 		if vv != "" {
-			formats := []string{
-				time.DateTime, // 2006-01-02 15:04:05
-				time.DateOnly, // 2006-01-02
-				time.RFC3339,  // 2006-01-02T15:04:05Z07:00
-			}
-
-			for _, format := range formats {
-				if t, err := time.Parse(format, vv); err == nil {
-					return sql.NullTime{Time: t, Valid: true}
-				}
-			}
+			t, valid := parseTimeFromString(vv)
+			return sql.NullTime{Time: t, Valid: valid}
 		}
 	case time.Time:
 		if !vv.IsZero() {
@@ -149,4 +169,32 @@ func ToNullTime[T int64 | string | time.Time](val T) sql.NullTime {
 	}
 
 	return sql.NullTime{}
+}
+
+func isNilAny(val any) bool {
+	if val == nil {
+		return true
+	}
+
+	rv := reflect.ValueOf(val)
+	switch rv.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func, reflect.Interface:
+		return rv.IsNil()
+	default:
+		return false
+	}
+}
+
+func parseTimeFromString(s string) (time.Time, bool) {
+	if s == "" {
+		return time.Time{}, false
+	}
+	formats := []string{time.RFC3339, time.DateTime, time.DateOnly}
+	for _, format := range formats {
+		// 建议指定本地时区，避免 UTC 时差问题
+		if t, err := time.ParseInLocation(format, s, time.Local); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
 }
