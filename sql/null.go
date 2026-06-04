@@ -10,6 +10,10 @@ import (
 	"github.com/sqlc-dev/pqtype"
 )
 
+type Number interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64
+}
+
 func GetNullString(filters map[string]string, key string) sql.NullString {
 	if len(filters) > 0 {
 		if v, ok := filters[key]; ok {
@@ -65,25 +69,25 @@ func GetNullTime(filters map[string]string, key string) sql.NullTime {
 	return sql.NullTime{}
 }
 
-func ToNullString(val string) sql.NullString {
-	if val == "" {
+func ToNullString(val *string) sql.NullString {
+	if val == nil {
 		return sql.NullString{}
 	}
-	return sql.NullString{String: val, Valid: true}
+	return sql.NullString{String: *val, Valid: true}
 }
 
-func ToNullInt32(val int32) sql.NullInt32 {
-	if val == 0 {
+func ToNullInt32[T Number](val *T) sql.NullInt32 {
+	if val == nil {
 		return sql.NullInt32{}
 	}
-	return sql.NullInt32{Int32: val, Valid: true}
+	return sql.NullInt32{Int32: int32(*val), Valid: true}
 }
 
-func ToNullInt64(val int64) sql.NullInt64 {
-	if val == 0 {
+func ToNullInt64[T Number](val *T) sql.NullInt64 {
+	if val == nil {
 		return sql.NullInt64{}
 	}
-	return sql.NullInt64{Int64: val, Valid: true}
+	return sql.NullInt64{Int64: int64(*val), Valid: true}
 }
 
 func ToNullJsonObject(val any) pqtype.NullRawMessage {
