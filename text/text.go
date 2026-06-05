@@ -135,9 +135,27 @@ func removeInvisibleCharacter(s string) string {
 }
 
 func Truncate(s string, size int) string {
-	runes := []rune(s)
-	if len(runes) > size {
-		runes = append(runes[:size], []rune("...")...)
+	// 1. 基础边界检查：若未超限或 size 不合法，直接返回原串
+	if size <= 0 || len(s) <= size {
+		return s
 	}
-	return string(runes)
+
+	// 2. 计算实际的字符截断点，为 "..." 预留空间
+	count := 0
+	cutIndex := 0
+
+	for i := range s {
+		if count == size-3 { // 预留3个字符给省略号
+			cutIndex = i
+			break
+		}
+		count++
+	}
+
+	// 3. 如果连放省略号的 3 个字符都不够，直接硬截断
+	if size < 3 {
+		return s[:size]
+	}
+
+	return s[:cutIndex] + "..."
 }
