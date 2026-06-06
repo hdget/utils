@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	jsonUtils "github.com/hdget/utils/json"
@@ -129,6 +130,13 @@ func ToNullInt64[T Number](val *T) sql.NullInt64 {
 	return sql.NullInt64{Int64: int64(*val), Valid: true}
 }
 
+func ToNullBool(val *bool) sql.NullBool {
+	if val == nil {
+		return sql.NullBool{}
+	}
+	return sql.NullBool{Bool: *val, Valid: true}
+}
+
 func ToNullJsonObject(val any) pqtype.NullRawMessage {
 	if !isNilAny(val) {
 		return pqtype.NullRawMessage{
@@ -149,23 +157,25 @@ func ToNullJsonArray(val any) pqtype.NullRawMessage {
 	return pqtype.NullRawMessage{}
 }
 
-func ToNullTime[T int64 | string | time.Time](val T) sql.NullTime {
+func ToNullTime[T *int64 | *string | *time.Time](val T) sql.NullTime {
+	if val == nil {
+		return sql.NullTime{}
+	}
+
 	switch vv := any(val).(type) { // 对空接口进行类型断言
-	case int64:
-		if vv >= 1e12 && vv < 1e15 { // 毫秒级范围
-			return sql.NullTime{Time: time.UnixMilli(vv), Valid: true}
-		} else if vv >= 0 && vv < 1e12 { // 秒级范围
-			return sql.NullTime{Time: time.Unix(vv, 0), Valid: true}
+	case *int64:
+		if *vv >= 1e12 && *vv < 1e15 { // 毫秒级范围
+			return sql.NullTime{Time: time.UnixMilli(*vv), Valid: true}
+		} else if *vv >= 0 && *vv < 1e12 { // 秒级范围
+			return sql.NullTime{Time: time.Unix(*vv, 0), Valid: true}
 		}
-	case string:
-		if vv != "" {
-			t, valid := parseTimeFromString(vv)
+	case *string:
+		if *vv != "" && !strings.EqualFold(*vv, "null") {
+			t, valid := parseTimeFromString(*vv)
 			return sql.NullTime{Time: t, Valid: valid}
 		}
-	case time.Time:
-		if !vv.IsZero() {
-			return sql.NullTime{Time: vv, Valid: true}
-		}
+	case *time.Time:
+		return sql.NullTime{Time: *vv, Valid: true}
 	}
 
 	return sql.NullTime{}
