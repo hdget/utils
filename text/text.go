@@ -2,9 +2,11 @@ package text
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -134,28 +136,41 @@ func removeInvisibleCharacter(s string) string {
 	}, s)
 }
 
-func Truncate(s string, size int) string {
-	// 1. 基础边界检查：若未超限或 size 不合法，直接返回原串
-	if size <= 0 || len(s) <= size {
-		return s
+func Truncate(v any, max int) string {
+	if max <= 0 {
+		return ""
 	}
 
-	// 2. 计算实际的字符截断点，为 "..." 预留空间
-	count := 0
-	cutIndex := 0
+	var data []byte
 
-	for i := range s {
-		if count == size-3 { // 预留3个字符给省略号
-			cutIndex = i
-			break
+	switch x := v.(type) {
+	case string:
+		data = []byte(x)
+	case []byte:
+		data = x
+	default:
+		data = []byte(fmt.Sprint(v))
+	}
+
+	if len(data) <= max {
+		return string(data)
+	}
+
+	const suffix = "..."
+	suffixLen := len(suffix)
+
+	if max <= suffixLen {
+		return suffix[:max]
+	}
+
+	cut := max - suffixLen
+
+	// UTF-8: 避免截断到半个字符
+	if utf8.Valid(data) {
+		for cut > 0 && (data[cut]&0xC0) == 0x80 {
+			cut--
 		}
-		count++
 	}
 
-	// 3. 如果连放省略号的 3 个字符都不够，直接硬截断
-	if size < 3 {
-		return s[:size]
-	}
-
-	return s[:cutIndex] + "..."
+	return string(data[:cut]) + suffix
 }
