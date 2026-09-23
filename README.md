@@ -30,11 +30,11 @@ go get github.com/hdget/utils/panic@panic/v0.0.1
 | --- | --- | --- |
 | 根模块 `utils` | `go get github.com/hdget/utils` | `v0.2.4` |
 | `ast` | `go get github.com/hdget/utils/ast` | `ast/v0.0.1` |
-| `cmp` | `go get github.com/hdget/utils/cmp` | `cmp/v0.0.1` |
+| `cmp` | `go get github.com/hdget/utils/cmp` | `cmp/v0.0.2` |
 | `currency` | `go get github.com/hdget/utils/currency` | `currency/v0.0.1` |
 | `encoding` | `go get github.com/hdget/utils/encoding` | `encoding/v0.0.1` |
-| `hash` | `go get github.com/hdget/utils/hash` | `hash/v0.0.1` |
-| `json` | `go get github.com/hdget/utils/json` | `json/v0.0.1` |
+| `hash` | `go get github.com/hdget/utils/hash` | `hash/v0.0.2` |
+| `json` | `go get github.com/hdget/utils/json` | `json/v0.0.2` |
 | `neo4j` | `go get github.com/hdget/utils/neo4j` | `neo4j/v0.0.1` |
 | `paginator` | `go get github.com/hdget/utils/paginator` | `paginator/v0.0.2` |
 | `panic` | `go get github.com/hdget/utils/panic` | `panic/v0.0.1` |
@@ -46,8 +46,9 @@ go get github.com/hdget/utils/panic@panic/v0.0.1
 
 `logger` 不是独立模块(无 `go.mod`),它随**根模块**发布,直接 `import "github.com/hdget/utils/logger"` 即可。
 
-> ⚠️ 已知问题:`cmp`、`hash`、`json` 的 `v0.0.1` 漏了对根模块的 `require`,单独构建会报
-> `cannot find module providing package github.com/hdget/utils`。请在使用这三个包时确认版本 ≥ `v0.0.2`。
+> ⚠️ `cmp`、`hash`、`json` 的 **`v0.0.1` 永久不可用**:它们的 `go.mod` 漏了对根模块的 `require`,
+> 单独构建会报 `cannot find module providing package github.com/hdget/utils`。Go 模块版本一经发布
+> 不可修改或撤回内容,所以这三个 `v0.0.1` 标签会一直留在代理缓存里 —— 使用或升级时请固定到 `v0.0.2` 及以上。
 
 ## 发布新版本
 
